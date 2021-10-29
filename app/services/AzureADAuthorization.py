@@ -26,7 +26,7 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
     aad_jwt_keys_cache: dict = {}
 
     def __init__(self, aad_instance: str = config.AAD_INSTANCE, aad_tenant: str = config.AAD_TENANT_ID, auto_error: bool = True):
-        self.scopes = ['Todo.Read', 'Todo.Write']
+        self.scopes = ['access_as_user']
         self.base_auth_url: str = f"{aad_instance}/{aad_tenant}"
         super(AzureADAuthorization, self).__init__(
             authorizationUrl=f"{self.base_auth_url}/oauth2/v2.0/authorize",
@@ -34,20 +34,19 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
             refreshUrl=f"{self.base_auth_url}/oauth2/v2.0/token",
             scheme_name="oauth2",
             scopes={
-                f'api://{config.API_CLIENT_ID}/Todo.Read': 'Read todo items',
-                f'api://{config.API_CLIENT_ID}/Todo.Write': 'Write todo items',
+                f'api://{config.API_CLIENT_ID}/access_as_user': 'Access API as user',
             },
             auto_error=auto_error
         )
 
     async def __call__(self, request: Request) -> User:
         token: str = await super(AzureADAuthorization, self).__call__(request) or ''
-        self._validate_token(token)
+        self._validate_token_scopes(token)
         decoded_token = self._decode_token(token)
         return self._get_user_from_token(decoded_token)
 
     @staticmethod
-    def _get_user_from_token(decoded_token: Union[Dict, Mapping]) -> User:
+    def _get_user_from_token(decoded_token: Mapping) -> User:
         try:
             user_id = decoded_token['oid']
         except Exception as e:
@@ -78,9 +77,11 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
             'verify_sub': True,
         }
 
-    def _validate_token(self, token: str):
+    def _validate_token_scopes(self, token: str):
+        """
+        Validate that the requested scopes are in the tokens claims
+        """
         try:
-            header = jwt.get_unverified_header(token) or {}
             claims = jwt.get_unverified_claims(token) or {}
         except Exception as e:
             log.debug(f'Malformed token: {token}, {e}')
@@ -106,13 +107,16 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
         """
         The base64 encoded keys are not always correctly padded, so pad with the right number of =
         """
-        key = key.encode('utf-8')
+        key = str(key.encode('utf-8'))
         missing_padding = len(key) % 4
         for _ in range(missing_padding):
             key = key + b'='
         return key
 
-    def _populate_aad_keys(self) -> None:
+    def _cache_aad_keys(self) -> None:
+        """
+        Cache all AAD JWT keys - so we don't have to make a web call each auth request
+        """
         response = requests.get(f"{self.base_auth_url}/v2.0/.well-known/openid-configuration")
         aad_metadata = response.json() if response.ok else None
         jwks_uri = aad_metadata['jwks_uri'] if aad_metadata and 'jwks_uri' in aad_metadata else None
@@ -129,21 +133,18 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
 
     def _get_token_key(self, key_id: str) -> str:
         if key_id not in AzureADAuthorization.aad_jwt_keys_cache:
-            self._populate_aad_keys()
+            self._cache_aad_keys()
         return AzureADAuthorization.aad_jwt_keys_cache[key_id]
 
-    def _decode_token(self, token: str) -> Union[Dict, Mapping]:
+    def _decode_token(self, token: str) -> Mapping:
         key_id = self._get_key_id(token)
+        if not key_id:
+            raise InvalidAuthorization('The token does not contain kid')
+
         key = self._get_token_key(key_id)
         try:
             options = self._get_validation_options()
-            return jwt.decode(
-                token=token,
-                key=key,
-                algorithms=['RS256'],
-                audience=config.API_AUDIENCE,
-                options=options
-            )
+            return jwt.decode(token=token, key=key, algorithms=['RS256'], audience=config.API_AUDIENCE, options=options)
         except JWTClaimsError as e:
             logging.debug(f'The token has some invalid claims: {e}')
             raise InvalidAuthorization('The token has some invalid claims')

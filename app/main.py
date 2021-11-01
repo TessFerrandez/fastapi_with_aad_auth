@@ -14,7 +14,7 @@ def get_application() -> FastAPI:
         swagger_ui_init_oauth={
             "usePkceWithAuthorizationCodeGrant": True,
             "clientId": config.SWAGGER_UI_CLIENT_ID,
-            "scopes": [f'api://{config.API_CLIENT_ID}/Todo.Read', f'api://{config.API_CLIENT_ID}/Todo.Write']
+            "scopes": [f'api://{config.API_CLIENT_ID}/access_as_user']
         }
     )
     application.include_router(api_router)

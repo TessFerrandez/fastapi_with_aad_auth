@@ -107,7 +107,7 @@ class AzureADAuthorization(OAuth2AuthorizationCodeBearer):
         """
         The base64 encoded keys are not always correctly padded, so pad with the right number of =
         """
-        key = str(key.encode('utf-8'))
+        key = key.encode('utf-8')
         missing_padding = len(key) % 4
         for _ in range(missing_padding):
             key = key + b'='

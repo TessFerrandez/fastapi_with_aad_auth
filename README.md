@@ -64,7 +64,7 @@ Create an App registration for Swagger
 1. Back at **App registrations**, select **New registration**
     - For **Name**, enter `TODO-API-SWAGGER`
     - For **Supported account types**, select **Accounts in any organizational directory**.
-    - For **Redirect URI**, enter `http://localhost:8000/oauth2-redirect`
+    - For **Redirect URI**, select **Single-page application (SPA)** and enter `http://localhost:8000/oauth2-redirect`
 1. Select **Register** to create the application.
 1. On the **Overview** page, look for the **Application (client) ID** value, and then record it for later use. You'll need it to configure the API (that is, `SWAGGER_UI_CLIENT_ID` in the *.env* file).
 
@@ -79,11 +79,60 @@ Create an App registration for Swagger
 
 ## Step 4: Configure the API
 
-> TODO: install libraries + set up .env
+Configure environment variables
+
+1. Copy the `.env.sample` file and rename to `.env`
+1. Set the `API_CLIENT_ID`, `API_CLIENT_SECRET` and `SWAGGER_UI_CLIENT_ID` to the values you gathered above
+1. Set the `AAD_TENANT_ID` to your Azure Tenant ID
+
+Install required libraries
+
+1. Open a command prompt and navigate to the directory where you cloned the repository
+1. Create a new virtual environment to install your python libraries `python -m venv .venv`
+1. Activate your virtual environment
+    - Windows: `.\.venv\Scripts\activate`
+    - Linux: `source .venv/bin/activate`
+1. Install the required libraries `pip install -r requirements.txt`
+
+Open Visual Studio Code and set the interpreter
+
+1. In the terminal window, in the project directory, run `code .`
+1. Visual Studio Code should recognize that there is a virtual environment and ask you if you want to activate it. If this does not happen, use **View->Command Palette->Python:Select Interpreter** and select the `.venv:venv` interpreter.
+1. Close down any open terminals and start a new one from **Terminal->New Terminal**. This ensures that any commands you run will be using the new interpreter.
 
 ## Step 5: Run the API locally
 
-> TODO: running the API locally
+Run the API from Visual Studio Code
+
+1. Open the file `app/main.py`
+1. Press **F5** to run under a debugger (or **CTRL+F5** to run without a debugger)
+1. Under **Debug Configuration** select **Python File**
+
+This will serve the api locally on your machine.
+
+> NOTE: The output suggests for you to browse to [http://localhost:8000](http://localhost:8000) - if you browse there you will see {"detail": "Not Found"}, this is normal as we don't have a default endpoint for our API.
+
+1. Browse to [http://localhost:8000/health](http://localhost:8000/health) to reach the health endpoint. If all is working correctly, you should be greeted with "OK"
+1. Browse to [http://localhost:8000/docs](http://localhost:8000/docs) to see the Swagger UI and the available endpoints.
+1. Try an endpoint - for example **[GET]/todoitems->Try it out->Execute**. This should result in a `401:Unauthorized`
+
+Log in to use the API
+
+1. Log in using the **Authorize** button at the top right of the page.
+    - **client_id:** should be pre-filled, leave it as is
+    - **client_secret:** should be empty, leave it as is
+    - **scopes:** select the `Access API as user` scope
+    - Select **Authorize** to log in
+1. Follow the prompts to log in with your account.
+1. In the **Permissions requested** dialog box, check the box to **Consent on behalf of your organization** and select **Accept** - you will only need to consent once for the API.
+1. In the **Available authorizations** dialog box, select **Close**
+
+Access the **[POST]/todoitems**
+
+1. Select the **[POST]/todoitems** endpoint
+1. Select **Try it out**. You can change the request body, and give it another name than "Walk the dog" if you want
+1. Select **Execute**
+1. Verify that you receive a **201** result, and the resulting json for the created item.
 
 ## How the sample works
 

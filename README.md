@@ -88,15 +88,39 @@ Configure environment variables
 Install required libraries
 
 1. Open a command prompt and navigate to the directory where you cloned the repository
-1. Create a new virtual environment to install your python libraries `python -m venv .venv`
+1. Create a new virtual environment to install your python libraries
+
+    ```
+    python -m venv .venv
+    ```
+
 1. Activate your virtual environment
-    - Windows: `.\.venv\Scripts\activate`
-    - Linux: `source .venv/bin/activate`
+
+    ```
+    .\.venv\Scripts\activate    # Windows
+    source .venv/bin/activate   # Linux
+    ```
+
+1. Upgrade pip to the latest version
+
+    ```
+    python.exe -m pip install --upgrade pip
+    ```
+
 1. Install the required libraries `pip install -r requirements.txt`
+
+    ```
+    pip install -r requirements.txt
+    ```
 
 Open Visual Studio Code and set the interpreter
 
-1. In the terminal window, in the project directory, run `code .`
+1. In the terminal window, in the project directory, launch visual studio code
+
+    ```
+    code .
+    ```
+
 1. Visual Studio Code should recognize that there is a virtual environment and ask you if you want to activate it. If this does not happen, use **View->Command Palette->Python:Select Interpreter** and select the `.venv:venv` interpreter.
 1. Close down any open terminals and start a new one from **Terminal->New Terminal**. This ensures that any commands you run will be using the new interpreter.
 
@@ -151,19 +175,3 @@ Access the **[POST]/todoitems**
 ### Testing access
 
 > TODO: maybe some unit tests etc. not sure if we need this, might be overkill
-
------
-
-Old stuff
-
-## Configuring Azure AD Applications
-
-## Configuring your dev environment
-
-```cmd
-python -m venv .venv
-python.exe -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-Fill out .env with ... coming soon

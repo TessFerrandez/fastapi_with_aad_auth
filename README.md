@@ -186,9 +186,9 @@ def get_user(user: User = Depends(authorize)) -> User:
 
 This, in turn, depends on **authorize**, defined in `app/services/AzureADAuthorization.py`. **authorize** is an instance of the **AzureADAuthorization**, that when called (through the `__call__` method) validates and decodes the authentication token against the Azure AD App and required scopes, and further generates a **User** instance based on the contents of the token.
 
-If the token is invalid, or can't be processed, the AzureADAuthorization class returns a **401 UNAUTHORIZED** HTTP status.
+If the token is invalid, or can't be processed, the **AzureADAuthorization** class returns a **401 UNAUTHORIZED** HTTP status.
 
-Because the **AzureADAuthorization** derives from **OAuth2AuthorizationCodeBearer**, FastAPI (and Swagger) understands that the endpoint requires authentication, and displays the padlock in the Swagger UI.
+Because the **AzureADAuthorization** class derives from **OAuth2AuthorizationCodeBearer**, FastAPI (and Swagger) understands that the endpoint requires authentication, and displays the padlock in the Swagger UI.
 
 ### Protecting endpoints
 

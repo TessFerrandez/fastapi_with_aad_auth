@@ -192,7 +192,7 @@ Because the **AzureADAuthorization** class derives from **OAuth2AuthorizationCod
 
 ### Protecting endpoints
 
-There are multiple ways to protect the endpoints, and the various endpoints implemented in this sample, shows some of these varieties.
+There are multiple ways to protect the endpoints, and the various endpoints implemented in this sample, show some of these varieties.
 
 #### Require user to be authenticated
 

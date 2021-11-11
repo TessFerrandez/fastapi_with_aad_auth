@@ -24,7 +24,7 @@ Register your web API in **App Registrations** in the Azure portal.
 1. Sign in to the Azure Portal
 1. If you have access to multiple tenants, use the **Directory + subscription** filter in the top menu to select the tenant in which you want to register an application.
 1. Find and select **Azure Active Directory**.
-1. Under **Manage**, select **App registrations > New registation**.
+1. Under **Manage**, select **App registrations > New registration**.
 1. Enter a **Name** for your application, for example `TODO-API`. Users of your app might see this name and you can change it later.
 1. For **Supported account types**, select **Accounts in any organizational directory**.
 1. Select **Register** to create the application.
@@ -90,26 +90,26 @@ Install required libraries
 1. Open a command prompt and navigate to the directory where you cloned the repository
 1. Create a new virtual environment to install your python libraries
 
-    ```
+    ```cmd
     python -m venv .venv
     ```
 
 1. Activate your virtual environment
 
-    ```
+    ```cmd
     .\.venv\Scripts\activate    # Windows
     source .venv/bin/activate   # Linux
     ```
 
 1. Upgrade pip to the latest version
 
-    ```
+    ```cmd
     python.exe -m pip install --upgrade pip
     ```
 
 1. Install the required libraries `pip install -r requirements.txt`
 
-    ```
+    ```cmd
     pip install -r requirements.txt
     ```
 
@@ -117,7 +117,7 @@ Open Visual Studio Code and set the interpreter
 
 1. In the terminal window, in the project directory, launch visual studio code
 
-    ```
+    ```cmd
     code .
     ```
 

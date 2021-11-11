@@ -162,16 +162,90 @@ Access the **[POST]/todoitems**
 
 ### The API
 
-> TODO: brief overview of the endpoints
+You can find the code for the available routes in `/app/api/routes/api.py`
+
+| Endpoint | Request Method | Description | Authentication | Auth method |
+| -- | -- | -- | -- | -- |
+| /health | GET | Get health status | No authentication |
+| /todoitems | GET | Get my todo items | User | Depends(get_user) |
+| /todoitems | POST | Create todo item | User | Depends(get_user) |
+| /todoitems | DELETE | Delete all todo items | Admin | Depends(get_admin_user) |
+| /todoitems/{id} | GET | Get todo item | User (owner of item or admin) | Depends(get_todo_item_by_id_from_path) |
+| /todoitems/{id} | DELETE | Delete todo item | User (owner of item or admin) | Depends(get_todo_item_by_id_from_path) |
 
 ### Auth code and dependencies
 
-> TODO: quick explanation of the auth code and the dependencies
+FastAPI has a powerful [**Dependency Injection**](https://fastapi.tiangolo.com/tutorial/dependencies/) system, that allows us to enforce security, authentication, role requirements etc.
+
+In our case, we have created a simple dependency function in `/app/api/dependencies/auth.py` to ensure that the user is logged in for the `GET /todoitems` endpoint for example.
+
+```python
+def get_user(user: User = Depends(authorize)) -> User:
+    return user
+```
+
+This, in turn, depends on **authorize**, defined in `app/services/AzureADAuthorization.py`. **authorize** is an instance of the **AzureADAuthorization**, that when called (through the `__call__` method) validates and decodes the authentication token against the Azure AD App and required scopes, and further generates a **User** instance based on the contents of the token.
+
+If the token is invalid, or can't be processed, the AzureADAuthorization class returns a **401 UNAUTHORIZED** HTTP status.
+
+Because the **AzureADAuthorization** derives from **OAuth2AuthorizationCodeBearer**, FastAPI (and Swagger) understands that the endpoint requires authentication, and displays the padlock in the Swagger UI.
 
 ### Protecting endpoints
 
-> TODO: showing different ways of protecting endpoints
+There are multiple ways to protect the endpoints, and the various endpoints implemented in this sample, shows some of these varieties.
 
-### Testing access
+#### Require user to be authenticated
 
-> TODO: maybe some unit tests etc. not sure if we need this, might be overkill
+By passing in `user = Depends(get_user)` as a parameter to our endpoint function, we require the user to be authenticated and also get the user info, so that we can filter the todo items that belong to the user.
+
+```python
+@router.get('/todoitems', status_code=status.HTTP_200_OK, name="Get My Todos [Admin or Owner of todo]")
+async def get_my_todos(user: User = Depends(get_user)) -> TodoItemsInList:
+    items: List[TodoItem] = todo_repository.get_items_for_user(user)
+    return TodoItemsInList(items=items)
+```
+
+#### Require the user to have the admin role
+
+We can create more specialized dependency functions, that both validates that the user is authenticated, and validates that the user has the correct role.
+
+```python
+def get_admin_user(user: User = Depends(authorize)) -> User:
+    if 'Admin' in user.roles:
+        return user
+    raise ForbiddenAccess('Admin privileges required')
+```
+
+We can then use the **get_admin_user** dependency function exactly as the **get_user** function.
+
+The example below shows this usage with a slight modification. If you don't need to use the returned **user** for further processing, you can simply add the dependency to the router decorator.
+
+```python
+@router.delete('/todoitems', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_admin_user)], name="Delete all Todos [Admin]")
+async def delete_all_todo_items() -> None:
+    todo_repository.delete_all_items()
+```
+
+##### Create a dependency that retrieves a todo item if the user can access it
+
+We can also create more intricate dependencies, that don't only validate authorization, but also validate access to items.
+
+```python
+def get_todo_item_by_id_from_path(id: int = Path(...), user: User = Depends(get_user)):
+    try:
+        todo: TodoItem = todo_repository.get_item(id)
+    except EntityNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Item does not exist')
+
+    if 'Admin' in user.roles or todo.owner_id == user.id:
+        return todo
+    raise HTTPException(status.HTTP_403_FORBIDDEN, detail='User is not allowed to access the item')
+```
+
+Because **get_user** indirectly depends on **OAuth2AuthorizationCodeBearer**, and **get_todo_item_by_id_from_path** depends on **get_user**, FastAPI and the Swagger UI will still understand that authorization is required.
+
+```python
+@router.get('/todoitems/{id}', status_code=status.HTTP_200_OK, name="Get Todo by Id [Admin or Owner of todo]")
+async def get_todo_by_id(id: int, todo: TodoItem = Depends(get_todo_item_by_id_from_path)) -> TodoItemInResponse:
+    return TodoItemInResponse(item=todo)
+```

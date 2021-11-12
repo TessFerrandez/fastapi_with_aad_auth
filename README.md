@@ -98,13 +98,13 @@ Install required libraries
 
     ```cmd
     .\.venv\Scripts\activate    # Windows
-    source .venv/bin/activate   # Linux
+    source .venv/Scripts/activate   # Linux
     ```
 
 1. Upgrade pip to the latest version
 
     ```cmd
-    python.exe -m pip install --upgrade pip
+    python -m pip install --upgrade pip
     ```
 
 1. Install the required libraries `pip install -r requirements.txt`
@@ -121,7 +121,7 @@ Open Visual Studio Code and set the interpreter
     code .
     ```
 
-1. Visual Studio Code should recognize that there is a virtual environment and ask you if you want to activate it. If this does not happen, use **View->Command Palette->Python:Select Interpreter** and select the `.venv:venv` interpreter.
+1. Visual Studio Code may recognize that there is a virtual environment and ask you if you want to activate it. If this does not happen, use **View->Command Palette->Python:Select Interpreter** and select the `.venv:venv` interpreter (in rare cases you may need to manually select the `.\.venv\Scripts\python.exe` if Visual Studio Code does not recommend it).
 1. Close down any open terminals and start a new one from **Terminal->New Terminal**. This ensures that any commands you run will be using the new interpreter.
 
 ## Step 5: Run the API locally
